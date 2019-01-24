@@ -75,6 +75,48 @@ image:
     };
 ```
 
+## Pre-release
+
+In this example we will clone a pending PR, build a pre-release, then
+check this pre-release for regressions.
+
+We need to build a release tarball in order to run our tests. The release
+tarball contains both an installer and the required binary packages to
+install and run NixOS.
+
+```
+git clone git@github.com:contributor/nix.git
+cd nix && nix-build release.nix -A binaryTarball.x86_64-linux
+```
+
+When the build finishes it will print the path to the tarball. Unpack
+the tarball and start a simple webserver to serve these data during
+our tests.
+
+```
+tar axf nix-2.3pre6621_92d08c0-x86_64-linux.tar.bz2 -C /tmp/
+cd /tmp/nix-2.3pre6621_92d08c0-x86_64-linux && python -m SimpleHTTPServer
+# Confirm the URL is working
+curl --output /dev/null --silent --head --fail \
+    "http://localhost:8000/install" || echo No Page Found!
+```
+
+Update `installUrl` in matrix.nix to point to our URL
+
+```
+  installScripts = let
+    installUrls = {
+      pre =  "http://localhost:8000/install";
+      stable = "https://nixos.org/nix/install";
+      "2.0.4" = "https://nixos.org/releases/nix/nix-2.0.4/install";
+    };
+    installUrl = installUrls.pre;
+```
+
+XXX Write Me!
+    do preflight checks before running tests
+
+
 ### Running Tests
 
 Run all the tests:
